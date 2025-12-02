@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Quiz de Inglés</title>
+<style>
+    html {
+    overflow-y: scroll; /* Siempre muestra scroll vertical */
+}
+
+body {
+    overflow-y: scroll; /* 🔹 Fuerza siempre un scroll vertical */
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-image: url('fondo-escuela-ingles-diseno-plano_23-2149487419.avif');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    position: relative;
+}
+
+.container {
+    text-align: center;
+    padding: 20px;
+    background-color: transparent; /* 🔹 Sin capa oscura global */
+    box-shadow: none;               /* 🔹 Sin sombra global */
+    border-radius: 10px;
+    width: 350px;
+    margin: 10px;
+}
+.quiz-opciones .container,
+#juego,
+.pantalla,
+#resultados {
+    background-color: rgba(0, 0, 0, 0.7); /* 🔹 Oscuro solo donde importa */
+    border-radius: 12px;
+}
+
+
+h1 { 
+    color: #fff; 
+    margin-bottom: 20px; 
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+button:hover { 
+    background-color: #45a049; 
+}
+
+/* Botón de pausa */
+#btnPausa {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: #FF9800;
+    font-size: 16px;
+    z-index: 100;
+    display: none;
+}
+
+#btnPausa:hover {
+    background-color: #E68900;
+}
+
+/* Pantalla de pausa */
+#pausa {
+    display: none;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.95);
+    padding: 40px;
+    border-radius: 15px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 30px gold;
+    z-index: 200;
+}
+
+#pausa h1 {
+    font-size: 50px;
+    color: gold;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 5px black;
+}
+
+/* Contadores en pantalla de inicio (esquina superior derecha) */
+#estadisticasInicio {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    text-align: right;
+    z-index: 150;
+}
+#estadisticasInicio .contador {
+    background-color: rgba(0,0,0,0.6);
+    color: gold;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    min-width: 160px;
+}
+
+/* Pantallas flotantes */
+.pantalla {
+    display: none;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 40px;
+    border-radius: 15px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 20px gold;
+}
+
+.pantalla h1 {
+    font-size: 40px;
+    color: gold;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 5px black;
+}
+
+/* Pantalla de resultados */
+#resultados {
+    display: none;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.85);
+    padding: 20px;
+    border-radius: 15px;
+    width: 80%;           
+    max-height: 80vh;     
+    overflow-y: auto;     
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 20px gold;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+    margin-top: 20px;
+}
+
+table, th, td { 
+    border: 1px solid white; 
+}
+th, td { 
+    padding: 8px; 
+    text-align: center; 
+}
+
+.correcto { color: white; background-color: green; }
+.incorrecto { color: white; background-color: darkred; }
+.noRespondida { color: white; background-color: darkblue; }
+
+/* Cuenta regresiva */
+#cuentaRegresiva {
+    display: none;
+    text-align: center;
+    font-size: 80px;
+    color: gold;
+    font-weight: bold;
+    text-shadow: 2px 2px 8px black;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Barra de tiempo */
+#barraContenedor {
+    width: 100%;
+    height: 15px;
+    background-color: rgba(255,255,255,0.3);
+    border-radius: 10px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    position: relative;
+}
+#barraTiempo {
+    width: 100%;
+    height: 100%;
+    background-color: limegreen;
+    transition: width linear;
+}
+
+/* Pantalla inicial */
+#inicio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* 🔹 lo centra también verticalmente */
+    width: 100%;
+}
+
+
+
+/* Cuadros de quizzes organizados en GRID */
+.quiz-opciones {
+    display: grid;
+    grid-template-columns: repeat(3, 220px);
+    gap: 30px;
+    justify-content: center;  /* 🔹 siempre centrado */
+    margin-top: 20px;
+    width: 100%; /* ocupa todo el ancho del padre */
+    max-width: 800px; /* evita que crezca demasiado */
+}
+
+
+.quiz-opciones .container {
+    width: 220px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.7); /* 🔹 Fondo gris uniforme */
+    border-radius: 12px;
+    transition: transform 0.3s, background-color 0.3s;
+    overflow: hidden; /* 🔹 Evita barras de scroll internas */
+    box-shadow: 0 0 10px rgba(0,0,0,0.3); /* 🔹 Sombra suave opcional */
+}
+
+
+.quiz-opciones .container:hover {
+    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+
+</style>
+</head>
+<body>
+<!-- Contadores de estadísticas (inicio) -->
+<div id="estadisticasInicio" style="display:none;">
+    <div id="contadorCompletados" class="contador">Completed: 0</div>
+    <div id="promedioPuntuaciones" class="contador">Average: 0</div>
+</div>
+
+<!-- Modal de login: nombre, rol y código de 4 dígitos -->
+<div id="loginModal" style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:300;">
+    <div style="background:rgba(0,0,0,0.9);padding:24px;border-radius:12px;width:420px;color:white;text-align:left;">
+        <h2 style="color:gold;margin-top:0;">Bienvenido</h2>
+        <label>Nombre:</label><br>
+        <input id="loginName" type="text" style="width:100%;padding:8px;margin-bottom:8px;" placeholder="Tu nombre">
+        <label>Tipo (Estudiante / Profesor):</label><br>
+        <select id="loginRole" style="width:100%;padding:8px;margin-bottom:8px;" onchange="onRoleChange()">
+            <option value="student">Estudiante</option>
+            <option value="teacher">Profesor</option>
+        </select>
+        <label>Código de 4 dígitos:</label><br>
+        <input id="loginCode" type="text" maxlength="4" pattern="\d{4}" style="width:100%;padding:8px;margin-bottom:12px;" placeholder="e.g. 1234">
+        <div id="passwordContainer" style="display:none;">
+            <label>Contraseña (Profesor):</label><br>
+            <input id="loginPassword" type="password" style="width:100%;padding:8px;margin-bottom:12px;" placeholder="Contraseña para el código">
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+            <button onclick="handleLogin()">Continuar</button>
+        </div>
+    </div>
+</div>
+<!-- Pantalla inicial (se muestra después del login) -->
+<div class="container" id="inicio" style="display:none;">
+    <h1>Select a Quiz</h1>
+    <div class="quiz-opciones">
+        <div class="container"><h2>Past Simple</h2><button onclick="seleccionarQuiz('simple')">start</button></div>
+        <div class="container"><h2>Past Continuous</h2><button onclick="seleccionarQuiz('continuo')">start</button></div>
+        <div class="container"><h2>Modal Verbs</h2><button onclick="seleccionarQuiz('modales')">start</button></div>
+        <div class="container"><h2>Verb Tenses</h2><button onclick="seleccionarQuiz('tiempos')">start</button></div>
+        <div class="container"><h2>Vocabulary</h2><button onclick="seleccionarQuiz('vocabulario')">start</button></div>
+        <div class="container"><h2>Basic Grammar</h2><button onclick="seleccionarQuiz('gramatica')">start</button></div>
+        <div class="container"><h2>Conversation</h2><button onclick="seleccionarQuiz('conversacion')">start</button></div>
+    </div>
+</div>
+
+<!-- Pantalla del juego -->
+<div class="container" id="juego" style="display: none;">
+    <h1 id="contadorPreguntas"></h1>
+    <div id="barraContenedor"><div id="barraTiempo"></div></div>
+    <p id="pregunta"></p>
+    <div id="opciones"></div>
+</div>
+
+<!-- Botón de pausa -->
+<button id="btnPausa" onclick="pausarJuego()">⏸ PAUSE</button>
+
+<!-- Pantalla de pausa -->
+<div id="pausa">
+    <h1>⏸ PAUSED ⏸</h1>
+    <button onclick="reanudarJuego()">Resume Game</button>
+</div>
+
+<!-- Pantallas flotantes -->
+<div class="pantalla" id="felicitaciones"><h1>🎉 Congratulations 🎉</h1><button onclick="siguientePregunta()">next question</button></div>
+<div class="pantalla" id="incorrecta"><h1 style="color:red;">❌ Wrong Answer ❌</h1><button onclick="siguientePregunta()">next question</button></div>
+<div class="pantalla" id="tiempoAgotado"><h1 style="color:orange;">⏰ Time's up! ⏰</h1><button onclick="siguientePregunta()">next question</button></div>
+
+<!-- Resultados -->
+<div id="resultados">
+    <h1>Quiz Results</h1>
+    <table id="tablaResultados"><tr><th>#</th><th>question</th><th>Results</th></tr></table>
+    <h2 id="porcentaje"></h2>
+    <h3 id="puntuacion"></h3>
+    <button onclick="mostrarRespuestas()">Show correct answers</button>
+    <button onclick="reiniciarJuego()">Restart Game</button>
+</div>
+
+<!-- Pantalla de cuenta regresiva -->
+<div id="cuentaRegresiva">3</div>
+
+<!-- Sonidos -->
+<audio id="sonidoCuenta" src="race-start-beeps-125125.mp3"></audio>
+<audio id="sonidoCorrecto" src="congratulations-male-spoken-264675.mp3"></audio>
+<audio id="sonidoIncorrecto" src="error-126627.mp3"></audio>
+<audio id="sonidoTiempo" src="thirteen-chimes-74593.mp3"></audio>
+<audio id="sonidoTic" src="clock-tick-tik-tak-76043.mp3" loop></audio>
+<script>
+/* ------------------ 7 BANCOS DE PREGUNTAS ------------------ */
+
+// 1️⃣ Pasado Simple
+let preguntasSimple = [
+    {pregunta: "What is the past of'go'?", opciones: ["goed","went","goes","going"], correcta: 1},
+    {pregunta: "What is the past of 'eat'?", opciones: ["ate","eated","eaten","eats"], correcta: 0},
+    {pregunta: "What is the past of 'have'?", opciones: ["haved","has","had","having"], correcta: 2},
+    {pregunta: "What is the past of 'run'?", opciones: ["ran","runned","running","runs"], correcta: 0},
+    {pregunta: "What is the past of 'see'?", opciones: ["saw","seed","seen","seeing"], correcta: 0},
+    {pregunta: "What is the past of 'come'?", opciones: ["came","comed","coming","comes"], correcta: 0},
+    {pregunta: "What is the past of 'write'?", opciones: ["writed","wrote","written","writing"], correcta: 1},
+    {pregunta: "What is the past of 'read'?", opciones: ["read","reads","reading","readded"], correcta: 0},
+    {pregunta: "What is the past of 'buy'?", opciones: ["buyed","bought","buys","buying"], correcta: 1},
+    {pregunta: "What is the past of 'make'?", opciones: ["maked","made","makes","making"], correcta: 1},
+    {pregunta: "What is the past of 'speak'?", opciones: ["speaked","spoke","spoken","speaks"], correcta: 1},
+    {pregunta: "What is the past of 'sing'?", opciones: ["sang","singed","sung","sings"], correcta: 0},
+    {pregunta: "What is the past of 'drink'?", opciones: ["drank","drunk","drinks","drinked"], correcta: 0},
+    {pregunta: "What is the past of 'drive'?", opciones: ["drived","drove","driven","drives"], correcta: 1},
+    {pregunta: "What is the past of 'fly'?", opciones: ["flyed","flew","flown","flies"], correcta: 1},
+    {pregunta: "What is the past of 'give'?", opciones: ["gave","gived","gives","given"], correcta: 0},
+    {pregunta: "What is the past of 'know'?", opciones: ["knew","knowed","known","knows"], correcta: 0},
+    {pregunta: "What is the past of 'take'?", opciones: ["taked","took","taken","takes"], correcta: 1},
+    {pregunta: "What is the past of 'teach'?", opciones: ["taught","teached","teaching","teachs"], correcta: 0},
+    {pregunta: "What is the past of 'think'?", opciones: ["thought","thinked","thinking","thinks"], correcta: 0},
+    {pregunta: "What is the past of 'win'?", opciones: ["winned","won","wins","winning"], correcta: 1},
+    {pregunta: "What is the past of 'understand'?", opciones: ["understood","understanded","understands","understanding"], correcta: 0},
+    {pregunta: "What is the past of 'stand'?", opciones: ["stood","standed","stands","standing"], correcta: 0},
+    {pregunta: "What is the past of 'begin'?", opciones: ["began","begined","begun","begins"], correcta: 0},
+    {pregunta: "What is the past of 'break'?", opciones: ["broke","breaked","broken","breaks"], correcta: 0},
+    {pregunta: "What is the past of 'bring'?", opciones: ["brought","bringed","brang","brings"], correcta: 0},
+    {pregunta: "What is the past of 'choose'?", opciones: ["chosen","choosed","chose","chooses"], correcta: 2},
+    {pregunta: "What is the past of 'catch'?", opciones: ["catched","caught","catches","catching"], correcta: 1},
+    {pregunta: "What is the past of 'feel'?", opciones: ["felt","feeled","feeling","feels"], correcta: 0},
+    {pregunta: "What is the past of 'forget'?", opciones: ["forgot","forgotten","forgeted","forgets"], correcta: 0}
+];
+let preguntasContinuo = [
+    {pregunta: "I / watch TV", opciones: ["I was watch TV","I was watching TV","I watching TV","I am watching TV"], correcta: 1},
+    {pregunta: "They / play soccer", opciones: ["They were playing soccer","They was playing soccer","They are playing soccer","They were play soccer"], correcta: 0},
+    {pregunta: "He / run", opciones: ["He was running","He running","He runned","He is running"], correcta: 0},
+    {pregunta: "We / study", opciones: ["We were studying","We was studying","We studyed","We are studying"], correcta: 0},
+    {pregunta: "She / read a book", opciones: ["She was reading a book","She reading a book","She was read a book","She read a book"], correcta: 0},
+    {pregunta: "I / sleep", opciones: ["I was sleeping","I sleeping","I were sleeping","I am sleeping"], correcta: 0},
+    {pregunta: "They / dance", opciones: ["They were dancing","They was dancing","They are dancing","They danced"], correcta: 0},
+    {pregunta: "You / write", opciones: ["You were writing","You was writing","You writing","You are writing"], correcta: 0},
+    {pregunta: "She / cook", opciones: ["She was cooking","She cooking","She were cooking","She is cooking"], correcta: 0},
+    {pregunta: "He / swim", opciones: ["He was swimming","He swimming","He were swimming","He is swimming"], correcta: 0},
+    {pregunta: "We / talk", opciones: ["We were talking","We was talking","We talk","We are talking"], correcta: 0},
+    {pregunta: "They / listen music", opciones: ["They were listening music","They was listening music","They were listened music","They are listening music"], correcta: 0},
+    {pregunta: "I / paint", opciones: ["I was painting","I painting","I were painting","I am painting"], correcta: 0},
+    {pregunta: "She / wash clothes", opciones: ["She was washing clothes","She washing clothes","She were washing clothes","She is washing clothes"], correcta: 0},
+    {pregunta: "He / watch TV", opciones: ["He was watching TV","He watching TV","He were watching TV","He is watching TV"], correcta: 0},
+    {pregunta: "We / play the guitar", opciones: ["We were playing the guitar","We was playing the guitar","We play the guitar","We are playing the guitar"], correcta: 0},
+    {pregunta: "They / run in the park", opciones: ["They were running in the park","They was running in the park","They run in the park","They are running in the park"], correcta: 0},
+    {pregunta: "I / do homework", opciones: ["I was doing homework","I doing homework","I were doing homework","I do homework"], correcta: 0},
+    {pregunta: "He / fix the car", opciones: ["He was fixing the car","He fixing the car","He were fixing the car","He fixes the car"], correcta: 0},
+    {pregunta: "She / open the window", opciones: ["She was opening the window","She opening the window","She were opening the window","She opens the window"], correcta: 0},
+    {pregunta: "We / wait for the bus", opciones: ["We were waiting for the bus","We was waiting for the bus","We wait for the bus","We are waiting for the bus"], correcta: 0},
+    {pregunta: "They / climb the tree", opciones: ["They were climbing the tree","They was climbing the tree","They climb the tree","They are climbing the tree"], correcta: 0},
+    {pregunta: "He / clean the house", opciones: ["He was cleaning the house","He cleaning the house","He were cleaning the house","He cleans the house"], correcta: 0},
+    {pregunta: "I / drink water", opciones: ["I was drinking water","I drinking water","I were drinking water","I am drinking water"], correcta: 0},
+    {pregunta: "She / write a letter", opciones: ["She was writing a letter","She writing a letter","She were writing a letter","She writes a letter"], correcta: 0},
+    {pregunta: "We / walk to school", opciones: ["We were walking to school","We was walking to school","We walk to school","We are walking to school"], correcta: 0},
+    {pregunta: "They / sleep", opciones: ["They were sleeping","They was sleeping","They sleep","They are sleeping"], correcta: 0},
+    {pregunta: "He / dance", opciones: ["He was dancing","He dancing","He were dancing","He dances"], correcta: 0},
+    {pregunta: "I / sing", opciones: ["I was singing","I singing","I were singing","I sing"], correcta: 0},
+    {pregunta: "She / jump", opciones: ["She was jumping","She jumping","She were jumping","She jumps"], correcta: 0}
+];
+let preguntasModales = [
+    {pregunta: "What is the sign denified 'can'?", opciones: ["Poder / Habilidad", "Deber", "Deseo", "Condición"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'must'", opciones: ["You must to go", "You must go", "You must goes", "You going must"], correcta: 1},
+    {pregunta: "¿Cuál es el pasado de 'can'?", opciones: ["could", "caned", "canned", "coulded"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'may' for permission", opciones: ["May I come in?", "I may to come in", "I may comes", "May comes I in?"], correcta: 0},
+    {pregunta: "Which modal expresses obligation?", opciones: ["must", "might", "can", "could"], correcta: 0},
+    {pregunta: "Which modal is used for possibility?", opciones: ["might", "shall", "will", "must"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'should'", opciones: ["You should study", "You should to study", "You should studies", "You study should"], correcta: 0},
+    {pregunta: "Which modal expresses prohibition?", opciones: ["mustn't", "should", "could", "may"], correcta: 0},
+    {pregunta: "Which modal expresses ability in the past?", opciones: ["could", "can", "might", "must"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'will'", opciones: ["I will call you", "I will to call you", "I will calls you", "I calling you will"], correcta: 0},
+    {pregunta: "Which modal is used for suggestions?", opciones: ["should", "must", "could", "will"], correcta: 0},
+    {pregunta: "Which modal indicates low possibility?", opciones: ["might", "must", "can", "will"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'shall' (formal)", opciones: ["Shall we start?", "Shall we to start?", "Shall starts we?", "Shall start we?"], correcta: 0},
+    {pregunta: "Which modal is used for logical deduction?", opciones: ["must", "might", "can", "will"], correcta: 0},
+    {pregunta: "Which modal expresses permission in the past?", opciones: ["could", "can", "must", "shall"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'could' for courtesy", opciones: ["Could you help me?", "Could help me?", "Could helps me?", "Could you helps me?"], correcta: 0},
+    {pregunta: "Which modal expresses promises?", opciones: ["will", "might", "could", "must"], correcta: 0},
+    {pregunta: "Which modal indicates negative inference?", opciones: ["can't", "won't", "shouldn't", "may not"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'may' for probability", opciones: ["It may rain", "It may rains", "It may raining", "It raining may"], correcta: 0},
+    {pregunta: "Which modal expresses strong obligation?", opciones: ["must", "should", "might", "could"], correcta: 0},
+    {pregunta: "Which modal expresses advice?", opciones: ["should", "must", "can", "shall"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'might'", opciones: ["She might come", "She might comes", "She might to come", "Might she comes"], correcta: 0},
+    {pregunta: "Which modal indicates lack of need?", opciones: ["needn't", "mustn't", "can't", "won't"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'will not'", opciones: ["I will not go", "I will not to go", "I will not goes", "I not will go"], correcta: 0},
+    {pregunta: "Which modal expresses present ability?", opciones: ["can", "could", "must", "shall"], correcta: 0},
+    {pregunta: "Which modal expresses spontaneous future?", opciones: ["will", "can", "may", "should"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'must not'", opciones: ["You must not enter", "You mustn't to enter", "You must enter not", "You no must enter"], correcta: 0},
+    {pregunta: "Which modal is used to make predictions?", opciones: ["will", "must", "may", "could"], correcta: 0},
+    {pregunta: "Which modal expresses deduction in the past?", opciones: ["must have", "should have", "could", "might"], correcta: 0},
+    {pregunta: "Select the correct sentence with 'could' in past", opciones: ["When I was young, I could run fast", "I could ran fast", "I could runs fast", "I could to run fast"], correcta: 0}
+];
+let preguntasTiempos = [
+    {pregunta: "Select the simple present of 'to work' for he", opciones: ["He work", "He works", "He working", "He worked"], correcta: 1},
+    {pregunta: "Selecciona el presente continuo de 'I / eat'", opciones: ["I eat", "I am eating", "I eating", "I eats"], correcta: 1},
+    {pregunta: "Select the simple past of 'to go' for she", opciones: ["She goes", "She went", "She going", "She gone"], correcta: 1},
+    {pregunta: "Select the past continuous of 'They / play football'", opciones: ["They playing football", "They was playing football", "They were playing football", "They play football"], correcta: 2},
+    {pregunta: "Select the present perfect of 'I / see that movie'", opciones: ["I have seen that movie", "I seen that movie", "I see that movie", "I have saw that movie"], correcta: 0},
+    {pregunta: "Select the past perfect of 'He / finish the job'", opciones: ["He had finished the job", "He has finished the job", "He finished the job", "He had finish the job"], correcta: 0},
+    {pregunta: "Select the simple future of 'We / travel'", opciones: ["We are travel", "We will travel", "We will traveled", "We traveling"], correcta: 1},
+    {pregunta: "Select the future continuous of 'I / study'", opciones: ["I will be studying", "I will studying", "I studying", "I be studying"], correcta: 0},
+    {pregunta: "Select the future perfect of 'They / finish homework'", opciones: ["They will have finished homework", "They will has finished homework", "They will finished homework", "They will be finished homework"], correcta: 0},
+    {pregunta: "Select the correct sentence in simple negative present", opciones: ["He don't like pizza", "He doesn't like pizza", "He don't likes pizza", "He doesn't likes pizza"], correcta: 1},
+    {pregunta: "Select the correct sentence in negative present continuous", opciones: ["I am not working", "I not working", "I don't working", "I doesn't working"], correcta: 0},
+    {pregunta: "Select the correct sentence in the negative simple past tense", opciones: ["She didn't went", "She didn't go", "She doesn't go", "She don't go"], correcta: 1},
+    {pregunta: "Select the correct sentence in the negative past continuous", opciones: ["They wasn't playing", "They weren't playing", "They not playing", "They didn't playing"], correcta: 1},
+    {pregunta: "Select the correct sentence in negative present perfect", opciones: ["I haven't seen her", "I didn't seen her", "I don't have seen her", "I not seen her"], correcta: 0},
+    {pregunta: "Select the correct sentence in the negative past perfect", opciones: ["He hadn't left", "He haven't left", "He didn't left", "He doesn't leave"], correcta: 0},
+    {pregunta: "Select the correct sentence in the negative simple future", opciones: ["I won't go", "I will don't go", "I don't will go", "I will not goes"], correcta: 0},
+    {pregunta: "Select the correct sentence in negative future continuous", opciones: ["She won't be working", "She won't working", "She not be working", "She don't be working"], correcta: 0},
+    {pregunta: "Select the correct sentence in the negative future perfect", opciones: ["They won't have finished", "They won't finished", "They not have finished", "They don't have finished"], correcta: 0},
+    {pregunta: "Select the question in the simple present", opciones: ["Do you like pizza?", "You like pizza?", "Are you like pizza?", "Like you pizza?"], correcta: 0},
+    {pregunta: "Select the question in present continuous", opciones: ["Are you studying?", "Do you studying?", "You are study?", "Study you are?"], correcta: 0},
+    {pregunta: "Select the question in the simple past", opciones: ["Did she go?", "She went?", "Did she went?", "Goes she?"], correcta: 0},
+    {pregunta: "Select the question in the past continuous", opciones: ["Were they sleeping?", "They were sleep?", "Did they sleeping?", "Were they sleep?"], correcta: 0},
+    {pregunta: "Select the question in the present perfect", opciones: ["Have you seen him?", "Did you seen him?", "You have see him?", "Have you see him?"], correcta: 0},
+    {pregunta: "Select the question in the past perfect", opciones: ["Had she left?", "She had leave?", "Did she left?", "Had she leaved?"], correcta: 0},
+    {pregunta: "Select the question in the simple future", opciones: ["Will you help me?", "Do you help me?", "Are you help me?", "You will helps me?"], correcta: 0},
+    {pregunta: "Select the question in the future continuous", opciones: ["Will they be working?", "Will they working?", "Are they work?", "They will be work?"], correcta: 0},
+    {pregunta: "Select the question in the future perfect", opciones: ["Will you have finished?", "Will you finished?", "Will have you finish?", "Have you finished?"], correcta: 0},
+    {pregunta: "Select the question in the simple present with 'he'", opciones: ["Does he play football?", "Do he play football?", "He play football?", "He plays football?"], correcta: 0},
+    {pregunta: "Select the question in the simple past with 'they'", opciones: ["Did they watch TV?", "Do they watch TV?", "They watch TV?", "Watched they TV?"], correcta: 0},
+    {pregunta: "Select the question in the simple future with 'we'", opciones: ["Will we travel tomorrow?", "We will travel tomorrow?", "Do we travel tomorrow?", "Are we travel tomorrow?"], correcta: 0}
+];
+let preguntasVocabulario = [
+  { pregunta: "What is the translation of 'cuchara'?", opciones: ["Spoon", "Knife", "Fork", "Plate"], correcta: 0 },
+  { pregunta: "What is the translation of 'tenedor'?", opciones: ["Fork", "Spoon", "Glass", "Chair"], correcta: 0 },
+  { pregunta: "What does 'oficina' mean?", opciones: ["Office", "School", "Kitchen", "Bedroom"], correcta: 0 },
+  { pregunta: "How do you say 'desayuno' in English?", opciones: ["Breakfast", "Lunch", "Dinner", "Snack"], correcta: 0 },
+  { pregunta: "How do you say 'almuerzo' in English?", opciones: ["Lunch", "Dinner", "Breakfast", "Snack"], correcta: 0 },
+  { pregunta: "How do you say 'cena' in English?", opciones: ["Dinner", "Lunch", "Breakfast", "Snack"], correcta: 0 },
+  { pregunta: "What does 'living habitacion' mean?", opciones: ["Living room", "Bedroom", "Bathroom", "Kitchen"], correcta: 0 },
+  { pregunta: "What does 'dormitorio' mean?", opciones: ["Bedroom", "Bathroom", "Living room", "Dining room"], correcta: 0 },
+  { pregunta: "What does 'baño' mean?", opciones: ["Bathroom", "Kitchen", "Living room", "Garage"], correcta: 0 },
+  { pregunta: "What does 'cosina' mean?", opciones: ["Kitchen", "Dining room", "Living room", "Balcony"], correcta: 0 },
+  { pregunta: "How do you say 'nevera' in English?", opciones: ["Fridge", "Stove", "Sink", "Oven"], correcta: 0 },
+  { pregunta: "How do you say 'estufa' in English?", opciones: ["Stove", "Fridge", "Table", "Chair"], correcta: 0 },
+  { pregunta: "How do you say 'silla' in English?", opciones: ["Chair", "Table", "Bed", "Door"], correcta: 0 },
+  { pregunta: "How do you say 'mesa' in English?", opciones: ["Table", "Chair", "Sofa", "Window"], correcta: 0 },
+  { pregunta: "How do you say 'puerta' in English?", opciones: ["Door", "Window", "Wall", "Floor"], correcta: 0 },
+  { pregunta: "What does 'ventana' mean?", opciones: ["Window", "Door", "Wall", "Ceiling"], correcta: 0 },
+  { pregunta: "What does 'piso' mean?", opciones: ["Floor", "Ceiling", "Wall", "Window"], correcta: 0 },
+  { pregunta: "What does 'techo' mean?", opciones: ["Ceiling", "Wall", "Floor", "Window"], correcta: 0 },
+  { pregunta: "What does 'muro' mean?", opciones: ["Wall", "Window", "Door", "Floor"], correcta: 0 },
+  { pregunta: "How do you say 'escoba' in English?", opciones: ["Broom", "Mop", "Rug", "Bucket"], correcta: 0 },
+  { pregunta: "How do you say 'trapeador' in English?", opciones: ["Mop", "Broom", "Rug", "Brush"], correcta: 0 },
+  { pregunta: "What does 'espejo' mean?", opciones: ["Mirror", "Door", "Table", "Window"], correcta: 0 },
+  { pregunta: "What does 'cama' mean?", opciones: ["Bed", "Table", "Chair", "Door"], correcta: 0 },
+  { pregunta: "How do you say 'plato' in English?", opciones: ["Plate", "Glass", "Fork", "Cup"], correcta: 0 },
+  { pregunta: "How do you say 'vaso' in English?", opciones: ["Glass", "Cup", "Plate", "Fork"], correcta: 0 },
+  { pregunta: "How do you say 'taza' in English?", opciones: ["Cup", "Glass", "Fork", "Plate"], correcta: 0 },
+  { pregunta: "What does 'alfombra' mean?", opciones: ["Carpet", "Curtain", "Chair", "Wall"], correcta: 0 },
+  { pregunta: "What does 'cortina' mean?", opciones: ["Curtain", "Carpet", "Table", "Door"], correcta: 0 },
+  { pregunta: "What does 'lámpara' mean?", opciones: ["Lamp", "Table", "Chair", "Bed"], correcta: 0 },
+  { pregunta: "What does 'sofá' mean?", opciones: ["Sofa", "Chair", "Bed", "Table"], correcta: 0 }
+];
+
+let preguntasGramatica = [
+  { pregunta: "Select the correct pronoun: '___ am a teacher'", opciones: ["I", "He", "She", "They"], correcta: 0 },
+  { pregunta: "Select the correct pronoun: '___ are my friends'", opciones: ["He", "She", "They", "I"], correcta: 2 },
+  { pregunta: "Select the adjective in the sentence: 'The big house is blue'", opciones: ["big", "house", "is", "blue"], correcta: 0 },
+  { pregunta: "Select the noun in the sentence: 'I like apples'", opciones: ["I", "like", "apples", "like apples"], correcta: 2 },
+  { pregunta: "Select the verb in the sentence: 'She runs fast'", opciones: ["She", "runs", "fast", "runs fast"], correcta: 1 },
+  { pregunta: "Select the object pronoun: 'Give it to ___'", opciones: ["me", "I", "he", "she"], correcta: 0 },
+  { pregunta: "Which one is an irregular verb?", opciones: ["go", "play", "look", "clean"], correcta: 0 },
+  { pregunta: "Which one is an adjective?", opciones: ["happy", "run", "dog", "quickly"], correcta: 0 },
+  { pregunta: "Which one is an adverb?", opciones: ["quickly", "run", "table", "big"], correcta: 0 },
+  { pregunta: "Which one is a noun?", opciones: ["dog", "run", "quick", "blue"], correcta: 0 },
+  { pregunta: "Select the correct plural of 'child'", opciones: ["childs", "children", "childes", "childrens"], correcta: 1 },
+  { pregunta: "Select the correct plural of 'mouse'", opciones: ["mouses", "mice", "mices", "mouse"], correcta: 1 },
+  { pregunta: "Select the correct plural of 'foot'", opciones: ["foots", "footes", "feet", "footes"], correcta: 2 },
+  { pregunta: "Select the comparative of 'big'", opciones: ["biger", "biggest", "bigger", "more big"], correcta: 2 },
+  { pregunta: "Select the superlative of 'happy'", opciones: ["happiest", "happyest", "more happy", "most happy"], correcta: 0 },
+  { pregunta: "Select the correct preposition: 'I am ___ school'", opciones: ["at", "in", "on", "to"], correcta: 0 },
+  { pregunta: "Select the correct preposition: 'The book is ___ the table'", opciones: ["in", "on", "at", "under"], correcta: 1 },
+  { pregunta: "Select the correct article: '___ apple is red'", opciones: ["A", "An", "The", "No article"], correcta: 1 },
+  { pregunta: "Select the correct article: 'I saw ___ stars last night'", opciones: ["a", "an", "the", "many"], correcta: 2 },
+  { pregunta: "Select the correct form of 'to be' for 'he'", opciones: ["is", "are", "am", "be"], correcta: 0 },
+  { pregunta: "Select the correct form of 'to be' for 'they'", opciones: ["is", "are", "am", "be"], correcta: 1 },
+  { pregunta: "Select the possessive pronoun: 'This is ___ book'", opciones: ["my", "me", "mine", "I"], correcta: 0 },
+  { pregunta: "Select the correct possessive pronoun: 'The dog is ___'", opciones: ["my", "mine", "I", "me"], correcta: 1 },
+  { pregunta: "Select the interrogative sentence", opciones: ["Do you like pizza?", "I like pizza", "He likes pizza", "Pizza is good"], correcta: 0 },
+  { pregunta: "Select the negative sentence", opciones: ["I don't like tea", "I like tea", "Do you like tea?", "Tea is good"], correcta: 0 },
+  { pregunta: "Select the correct contraction of 'I am'", opciones: ["I'm", "Im", "I'am", "I m"], correcta: 0 },
+  { pregunta: "Select the correct contraction of 'They are'", opciones: ["They're", "Theyre", "The're", "They are"], correcta: 0 },
+  { pregunta: "Select the correct contraction of 'He is'", opciones: ["He's", "Hes", "He´s", "He s"], correcta: 0 },
+  { pregunta: "Select the correct contraction of 'We will'", opciones: ["We'll", "Weel", "We'lll", "We will"], correcta: 0 },
+  { pregunta: "Select the correct contraction of 'She has'", opciones: ["She's", "Shes", "She´has", "She is"], correcta: 0 }
+];
+
+let preguntasConversacion = [
+    {pregunta: "¿Cómo preguntas '¿Cómo estás?' en inglés?", opciones: ["How are you?", "How you are?", "Are you how?", "You how are?"], correcta: 0},
+    {pregunta: "¿Cuál es una respuesta correcta a 'How are you?'", opciones: ["I am fine, thank you", "I am thanks", "I thanks", "I am goodly"], correcta: 0},
+    {pregunta: "¿Cómo preguntas '¿Cuál es tu nombre?' en inglés?", opciones: ["What is your name?", "Which your name?", "How your name?", "Who is you name?"], correcta: 0},
+    {pregunta: "¿Cuál es una forma de hablar de hobbies?", opciones: ["I like reading books", "I am read books", "I like to books", "I readed books"], correcta: 0},
+    {pregunta: "¿Cómo preguntas sobre experiencias?", opciones: ["Have you ever traveled?", "Did you ever travel?", "Do you ever traveled?", "You ever travel?"], correcta: 0},
+    {pregunta: "¿Cómo hablas sobre tu ciudad?", opciones: ["My city is beautiful", "My city beautiful", "I city is beautiful", "The my city is beautiful"], correcta: 0},
+    {pregunta: "¿Cómo hablas de tus vacaciones pasadas?", opciones: ["I went to the beach last year", "I go to the beach last year", "I goed to the beach", "I gone to the beach"], correcta: 0},
+    {pregunta: "¿Cómo dices 'Me gusta viajar'?", opciones: ["I like traveling", "I like travel", "I traveling like", "I like travels"], correcta: 0},
+    {pregunta: "¿Cómo preguntas '¿Qué haces en tu tiempo libre?'?", opciones: ["What do you do in your free time?", "What you do in free time?", "Do you what in free time?", "What are you free time?"], correcta: 0},
+    {pregunta: "¿Cómo hablas sobre un hobby futuro?", opciones: ["I will start painting next month", "I start paint next month", "I painting next month", "I am start painting next month"], correcta: 0},
+    {pregunta: "¿Cómo inicias una conversación casual?", opciones: ["Hi! How are you?", "Hello! Where go?", "Hey! Good?", "Hi! You well?"], correcta: 0},
+    {pregunta: "¿Cómo respondes 'Where are you from?'?", opciones: ["I am from Colombia", "I from Colombia", "From Colombia I", "Colombia from I am"], correcta: 0},
+    {pregunta: "¿Cómo preguntas '¿Te gusta la música?'?", opciones: ["Do you like music?", "Are you like music?", "You like music?", "Do like you music?"], correcta: 0},
+    {pregunta: "¿Cómo hablas sobre tu comida favorita?", opciones: ["My favorite food is pizza", "My favorite food pizza", "My favorite is pizza food", "My food favorite is pizza"], correcta: 0},
+    {pregunta: "¿Cómo invitas a alguien a salir?", opciones: ["Would you like to go out?", "You want go out?", "Do you to go out?", "Go out you want?"], correcta: 0},
+    {pregunta: "¿Cómo preguntas sobre hobbies?", opciones: ["What are your hobbies?", "Which are your hobbies?", "What your hobbies are?", "Are your hobbies?"], correcta: 0},
+    {pregunta: "¿Cómo hablas de un viaje futuro?", opciones: ["I am going to travel next summer", "I going to travel next summer", "I will going travel next summer", "I am going travel next summer"], correcta: 0},
+    {pregunta: "¿Cómo preguntas '¿Qué hora es?' en inglés?", opciones: ["What time is it?", "What is the time?", "Which time is?", "Time is what?"], correcta: 0},
+    {pregunta: "¿Cómo pides repetir algo?", opciones: ["Can you repeat, please?", "Repeat you, please?", "You can repeat, please?", "Please you repeat?"], correcta: 0},
+    {pregunta: "¿Cómo respondes 'Nice to meet you'?", opciones: ["Nice to meet you too", "Me too nice", "Me nice to", "Nice meet"], correcta: 0},
+    {pregunta: "¿Cómo dices que algo te interesa?", opciones: ["I am interested in music", "I interested in music", "I interest music", "I am interesting in music"], correcta: 0},
+    {pregunta: "¿Cómo preguntas '¿Dónde vives?' en inglés?", opciones: ["Where do you live?", "Where you live?", "Where are you live?", "You live where?"], correcta: 0},
+    {pregunta: "¿Cómo hablas de tus planes del fin de semana?", opciones: ["I am going to visit my family", "I visit my family", "I going visit my family", "I am go to visit my family"], correcta: 0},
+    {pregunta: "¿Cómo preguntas sobre deportes?", opciones: ["Do you play any sports?", "Play you any sports?", "Do you any sports play?", "You play any sport?"], correcta: 0},
+    {pregunta: "¿Cómo hablas de tu día normal?", opciones: ["I wake up at 7 and go to work", "I wakes up at 7 and go to work", "I wake at 7 and goes to work", "I waking up at 7 and go to work"], correcta: 0},
+    {pregunta: "¿Cómo dices 'Estoy aprendiendo inglés'?", opciones: ["I am learning English", "I learning English", "I learn English", "I am learn English"], correcta: 0},
+    {pregunta: "¿Cómo preguntas '¿Has estado en Londres?'?", opciones: ["Have you been to London?", "Did you been to London?", "You have been in London?", "Have you in London?"], correcta: 0},
+    {pregunta: "¿Cómo hablas sobre una experiencia pasada?", opciones: ["I visited Paris last year", "I visit Paris last year", "I visiting Paris last year", "I have visit Paris last year"], correcta: 0},
+    {pregunta: "¿Cómo hablas sobre algo que te gusta hacer?", opciones: ["I enjoy playing guitar", "I enjoy play guitar", "I playing guitar enjoy", "I am enjoy playing guitar"], correcta: 0},
+    {pregunta: "¿Cómo terminas una conversación formal?", opciones: ["It was nice talking to you", "It was nice talk to you", "Nice talking you", "Nice to talk you"], correcta: 0}
+]
+
+
+
+/* ------------------ VARIABLES GLOBALES ------------------ */
+let preguntas = [];
+let preguntasRestantes = [];
+let preguntaActual = null;
+let resultados = [];
+let timer = null;
+let barra = null;
+let juegoEnPausa = false;
+let tiempoRestante = 10000;
+let quizStats = {}; // legacy/global per-browser (kept for backward compat)
+let currentQuizType = null;
+let classData = {}; // structure: { [code]: { students: { [name]: { quizzes: { tipo: score } } } } }
+let currentUser = null; // { role:'student'|'teacher', name, code }
+// Helper: dispatch update event so same-tab teacher panels refresh
+function notifyClassDataChanged(){
+    try{
+        // cause storage event for other tabs by re-setting the same key
+        localStorage.setItem('classData', JSON.stringify(classData));
+    }catch(e){}
+    // custom event for same-window listeners
+    window.dispatchEvent(new Event('classDataChanged'));
+}
+
+/* ------------------ FUNCIONES DE AUDIO ------------------ */
+function reproducir(id, velocidad=1){
+    let sonido = document.getElementById(id);
+    sonido.pause();
+    sonido.currentTime=0;
+    sonido.playbackRate = velocidad;
+    sonido.play();
+}
+
+function detenerSonidos(){
+    let sonidos = document.getElementsByTagName("audio");
+    for(let i=0;i<sonidos.length;i++){
+        sonidos[i].pause();
+        sonidos[i].currentTime = 0;
+    }
+}
+
+// Función para mezclar un array (Fisher-Yates)
+function mezclarArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+// Mezcla las opciones de cada pregunta y actualiza el índice de la correcta
+function mezclarOpcionesPreguntas(preguntas) {
+    return preguntas.map(p => {
+        let opcionesMezcladas = [...p.opciones];
+        let correctaOriginal = p.opciones[p.correcta];
+        mezclarArray(opcionesMezcladas);
+        let nuevaCorrecta = opcionesMezcladas.indexOf(correctaOriginal);
+        return {
+            pregunta: p.pregunta,
+            opciones: opcionesMezcladas,
+            correcta: nuevaCorrecta
+        };
+    });
+}
+/* ------------------ SELECCIÓN DE QUIZ ------------------ */
+function seleccionarQuiz(tipo) {
+    currentQuizType = tipo;
+    if (tipo==='simple') preguntas=mezclarOpcionesPreguntas(preguntasSimple);
+    else if (tipo==='continuo') preguntas=mezclarOpcionesPreguntas(preguntasContinuo);
+    else if (tipo==='modales') preguntas=mezclarOpcionesPreguntas(preguntasModales);
+    else if (tipo==='tiempos') preguntas=mezclarOpcionesPreguntas(preguntasTiempos);
+    else if (tipo==='vocabulario') preguntas=mezclarOpcionesPreguntas(preguntasVocabulario);
+    else if (tipo==='gramatica') preguntas=mezclarOpcionesPreguntas(preguntasGramatica);
+    else if (tipo==='conversacion') preguntas=mezclarOpcionesPreguntas(preguntasConversacion);
+
+    // Ocultar contadores mientras se juega
+    document.getElementById("estadisticasInicio").style.display = 'none';
+    document.getElementById("inicio").style.display = "none";
+    mostrarCuentaRegresiva();
+}
+
+
+/* ------------------ CUENTA REGRESIVA ------------------ */
+/* ------------------ ESTADÍSTICAS (localStorage) ------------------ */
+function loadStats(){
+    try{
+        let raw = localStorage.getItem('quizStats');
+        if(raw) quizStats = JSON.parse(raw);
+        else quizStats = {};
+    }catch(e){ quizStats = {}; }
+    updateStartCounters();
+}
+
+function saveStats(){
+    try{ localStorage.setItem('quizStats', JSON.stringify(quizStats)); }
+    catch(e){ /* ignore */ }
+}
+
+function updateStartCounters(){
+    let compEl = document.getElementById('contadorCompletados');
+    let avgEl = document.getElementById('promedioPuntuaciones');
+    let statsEl = document.getElementById('estadisticasInicio');
+
+    // Si hay usuario estudiante activo, mostrar sus stats
+    if(currentUser && currentUser.role === 'student'){
+        ensureStudentRecord(currentUser.code, currentUser.name);
+        let rec = classData[currentUser.code].students[currentUser.name];
+        let quizzes = rec.quizzes || {};
+        let keys = Object.keys(quizzes);
+        let count = keys.length;
+        let avg = 0;
+        if(count>0){
+            let sum=0; for(let k of keys) sum += Number(quizzes[k])||0;
+            avg = Math.round((sum/count)*100)/100;
+        }
+        if(compEl) compEl.textContent = `Completados: ${count}`;
+        if(avgEl) avgEl.textContent = `Promedio: ${avg}`;
+        if(statsEl) statsEl.style.display = 'block';
+        return;
+    }
+
+    // Si no hay usuario (o es profesor), mostrar valores por defecto
+    if(compEl) compEl.textContent = `Completed: 0`;
+    if(avgEl) avgEl.textContent = `Average: 0`;
+    if(statsEl) statsEl.style.display = (document.getElementById('inicio').style.display !== 'none') ? 'block' : 'none';
+}
+
+// Inicializar estadísticas al cargar
+// Cargar datos al inicio
+window.addEventListener('load', ()=>{ loadClassData(); updateStartCounters(); });
+
+/* ------------------ GESTIÓN DE DATOS POR CÓDIGO/ALUMNOS ------------------ */
+function loadClassData(){
+    try{ let raw = localStorage.getItem('classData'); if(raw) classData = JSON.parse(raw); else classData = {}; }
+    catch(e){ classData = {}; }
+}
+
+function saveClassData(){
+    try{ localStorage.setItem('classData', JSON.stringify(classData)); }
+    catch(e){}
+    // notify others
+    try{ window.dispatchEvent(new Event('classDataChanged')); } catch(e){}
+}
+
+function ensureStudentRecord(code, name){
+    if(!classData[code]) classData[code] = { students: {} };
+    if(!classData[code].students[name]) classData[code].students[name] = { quizzes: {} };
+}
+
+/* ------------------ CUENTA REGRESIVA ------------------ */
+function mostrarCuentaRegresiva() {
+    let contador=3; 
+    let pantalla=document.getElementById("cuentaRegresiva");
+    pantalla.style.display="block"; 
+    pantalla.textContent=contador;
+    reproducir('sonidoCuenta');
+
+    let intervalo=setInterval(()=>{
+        contador--;
+        if(contador>0) pantalla.textContent=contador;
+        else if(contador===0) pantalla.textContent="GO!!";
+        else {
+            clearInterval(intervalo); 
+            pantalla.style.display="none"; 
+            // mostrar inicio del juego para estudiante o profesor
+            iniciarJuego();
+        }
+    },1000);
+}
+
+/* ------------------ INICIO Y CONTROL DEL JUEGO ------------------ */
+function iniciarJuego(){
+    preguntasRestantes=[...preguntas];
+    resultados=[];
+    juegoEnPausa=false;
+    document.getElementById("juego").style.display="block";
+    document.getElementById("btnPausa").style.display="block";
+    siguientePregunta();
+}
+
+function mostrarPregunta() {
+    let p=preguntaActual;
+    document.getElementById("contadorPreguntas").textContent = `Question ${resultados.length + 1} / ${preguntas.length}`;
+    document.getElementById("pregunta").textContent=p.pregunta;
+    
+    let html='';
+    for(let i=0;i<p.opciones.length;i++){
+        html+=`<button onclick="verificarRespuesta(${i})">${p.opciones[i]}</button><br>`;
+    }
+    document.getElementById("opciones").innerHTML=html;
+
+    reproducir('sonidoTic'); 
+    iniciarBarraAnimada();
+}
+
+/* ------------------ TEMPORIZADOR Y BARRA ------------------ */
+function iniciarBarraAnimada(){
+    clearTimeout(timer);
+    barra=document.getElementById("barraTiempo");
+    barra.style.transition='none';
+    barra.style.width="100%";
+
+    void barra.offsetWidth; 
+    barra.style.transition='width 10s linear';
+    barra.style.width="0%";
+
+    timer=setTimeout(()=>{tiempoAgotado();},10000);
+}
+
+/* ------------------ VERIFICAR RESPUESTAS ------------------ */
+function verificarRespuesta(i){
+    clearTimeout(timer);
+    detenerSonidos();
+
+    let correcta=(i===preguntaActual.correcta);
+    resultados.push({pregunta:preguntaActual.pregunta,correcta:correcta,respondida:true});
+    document.getElementById("juego").style.display="none";
+
+    if(correcta){
+        reproducir('sonidoCorrecto');
+        document.getElementById("felicitaciones").style.display="block";
+    } else {
+        reproducir('sonidoIncorrecto',2.0); 
+        document.getElementById("incorrecta").style.display="block";
+    }
+}
+
+/* ------------------ TIEMPO AGOTADO ------------------ */
+function tiempoAgotado(){
+    detenerSonidos();
+    resultados.push({pregunta:preguntaActual.pregunta,correcta:false,respondida:false});
+    reproducir('sonidoTiempo');
+    document.getElementById("juego").style.display="none";
+    document.getElementById("tiempoAgotado").style.display="block";
+}
+
+/* ------------------ SIGUIENTE PREGUNTA ------------------ */
+function siguientePregunta(){
+    detenerSonidos();
+    document.getElementById("felicitaciones").style.display="none";
+    document.getElementById("incorrecta").style.display="none";
+    document.getElementById("tiempoAgotado").style.display="none";
+
+    if(preguntasRestantes.length===0){
+        mostrarResultados(); 
+        return;
+    }
+    let idx=Math.floor(Math.random()*preguntasRestantes.length);
+    preguntaActual=preguntasRestantes.splice(idx,1)[0];
+    document.getElementById("juego").style.display="block";
+    mostrarPregunta();
+}
+
+/* ------------------ PAUSA Y REANUDACIÓN ------------------ */
+function pausarJuego(){
+    juegoEnPausa=true;
+    clearTimeout(timer);
+    detenerSonidos();
+    document.getElementById("juego").style.display="none";
+    document.getElementById("pausa").style.display="block";
+    document.getElementById("btnPausa").style.display="none";
+}
+
+function reanudarJuego(){
+    juegoEnPausa=false;
+    document.getElementById("pausa").style.display="none";
+    document.getElementById("btnPausa").style.display="block";
+    
+    // Mezclar las preguntas restantes
+    mezclarArray(preguntasRestantes);
+    
+    // Cambiar la pregunta actual
+    if(preguntasRestantes.length>0){
+        let idx=Math.floor(Math.random()*preguntasRestantes.length);
+        preguntaActual=preguntasRestantes.splice(idx,1)[0];
+    }
+    
+    document.getElementById("juego").style.display="block";
+    mostrarPregunta();
+}
+
+/* ------------------ MOSTRAR RESULTADOS ------------------ */
+function mostrarResultados(){
+    document.getElementById("juego").style.display="none";
+    document.getElementById("btnPausa").style.display="none";
+    document.getElementById("resultados").style.display="block";
+    let tabla=document.getElementById("tablaResultados");
+    tabla.innerHTML=`<tr><th>#</th><th>question</th><th>result</th></tr>`;
+
+    let correctas=0;
+    for(let i=0;i<resultados.length;i++){
+        let fila=document.createElement("tr");
+        let estado="";
+        if(!resultados[i].respondida){
+            fila.className="noRespondida"; estado="⏰ not answered";
+        } else if(resultados[i].correcta){
+            fila.className="correcto"; estado="✅ Correct"; correctas++;
+        } else {
+            fila.className="incorrecto"; estado="❌ Incorrect";
+        }
+
+        fila.innerHTML=`<td>${i+1}</td><td>${resultados[i].pregunta}</td><td>${estado}</td>`;
+        tabla.appendChild(fila);
+    }
+
+    let porcentaje=Math.round((correctas/resultados.length)*100);
+    document.getElementById("porcentaje").textContent=`Percentage of hits: ${porcentaje}%`;
+
+    let puntuacion=(((porcentaje)*5)/100);
+    document.getElementById("puntuacion").textContent=`punctuation: ${puntuacion}`;
+
+    // Guardar estadísticas solo si se terminó el cuestionario completo
+    if(resultados.length === preguntas.length && currentQuizType){
+        // Si hay usuario estudiante, guardar en classData
+        if(currentUser && currentUser.role === 'student'){
+            ensureStudentRecord(currentUser.code, currentUser.name);
+            classData[currentUser.code].students[currentUser.name].quizzes[currentQuizType] = puntuacion;
+            // save and notify teacher panels (other tabs)
+            saveClassData();
+            notifyClassDataChanged();
+            updateStartCounters();
+        } else {
+            // legacy/global fallback
+            quizStats[currentQuizType] = puntuacion;
+            try{ localStorage.setItem('quizStats', JSON.stringify(quizStats)); }catch(e){}
+            updateStartCounters();
+        }
+    }
+}
+
+/* ------------------ MOSTRAR RESPUESTAS CORRECTAS ------------------ */
+function mostrarRespuestas(){
+    let tabla=document.getElementById("tablaResultados");
+    let filas=tabla.getElementsByTagName("tr");
+
+    for(let i=1;i<filas.length;i++){
+        let indice=i-1;
+        let td=filas[i].cells[2];
+        let correcta=preguntas.find(p=>p.pregunta===resultados[indice].pregunta).opciones[
+            preguntas.find(p=>p.pregunta===resultados[indice].pregunta).correcta
+        ];
+        td.textContent="✔ Respuesta: "+correcta;
+        td.style.backgroundColor="purple";
+    }
+}
+
+/* ------------------ REINICIAR ------------------ */
+function reiniciarJuego(){
+    document.getElementById("resultados").style.display="none";
+    document.getElementById("inicio").style.display="flex";
+    updateStartCounters();
+}
+
+/* ------------------ LOGIN Y PANEL PROFESOR ------------------ */
+function onRoleChange(){
+    let role = document.getElementById('loginRole').value;
+    let pw = document.getElementById('passwordContainer');
+    if(role === 'teacher') pw.style.display = 'block'; else pw.style.display = 'none';
+}
+
+function handleLogin(){
+    let name = (document.getElementById('loginName').value || '').trim();
+    let role = document.getElementById('loginRole').value;
+    let code = (document.getElementById('loginCode').value || '').trim();
+    if(!name){ alert('Ingrese un nombre'); return; }
+    if(!/^[0-9]{4}$/.test(code)){ alert('Ingrese un código de 4 dígitos'); return; }
+
+    loadClassData();
+
+    if(role === 'teacher'){
+        // teacher must supply password
+        let pass = (document.getElementById('loginPassword').value || '');
+        if(!pass){ alert('Ingrese una contraseña para el profesor'); return; }
+
+        // if code exists, verify password
+        if(classData[code] && classData[code].password){
+            if(classData[code].password !== pass){ alert('Contraseña incorrecta para este código'); return; }
+        } else {
+            // create/activate code with password
+            if(!classData[code]) classData[code] = { students: {}, active: true };
+            classData[code].password = pass;
+            classData[code].active = true;
+            saveClassData();
+            notifyClassDataChanged();
+        }
+
+        currentUser = { role: role, name: name, code: code };
+        document.getElementById('loginModal').style.display = 'none';
+        showTeacherPanel(code);
+        return;
+    }
+
+    // student flow: code must exist and be active
+    if(!classData[code] || !classData[code].active){
+        alert('Código no activo. Pida al profesor que registre el código primero.');
+        return;
+    }
+
+    // if student name exists, reuse; otherwise create
+    ensureStudentRecord(code, name);
+    currentUser = { role: role, name: name, code: code };
+    document.getElementById('loginModal').style.display = 'none';
+    document.getElementById('inicio').style.display = 'flex';
+    updateStartCounters();
+}
+
+function showTeacherPanel(code){
+    loadClassData();
+    let containerId = 'teacherPanel';
+    let existing = document.getElementById(containerId);
+    if(existing){ existing.remove(); }
+
+    let panel = document.createElement('div');
+    panel.id = containerId;
+    panel.style.position = 'fixed';
+    panel.style.top = '40px';
+    panel.style.left = '50%';
+    panel.style.transform = 'translateX(-50%)';
+    panel.style.width = '720px';
+    panel.style.maxHeight = '80vh';
+    panel.style.overflow = 'auto';
+    panel.style.background = 'rgba(0,0,0,0.95)';
+    panel.style.color = 'white';
+    panel.style.padding = '20px';
+    panel.style.borderRadius = '12px';
+    panel.style.zIndex = 400;
+
+    function build(){
+        panel.innerHTML='';
+        let title = document.createElement('h2');
+        title.textContent = 'Panel de Profesor';
+        title.style.color = 'gold';
+        panel.appendChild(title);
+
+        let info = document.createElement('p');
+        info.textContent = `Código: ${code}`;
+        panel.appendChild(info);
+
+        let controls = document.createElement('div');
+        controls.style.display='flex'; controls.style.justifyContent='flex-end'; controls.style.gap='8px';
+        let btnBorrar = document.createElement('button'); btnBorrar.textContent='Borrar código';
+        btnBorrar.onclick = ()=>{
+            if(!confirm('¿Borrar todo los datos asociados a este código? Esta acción es irreversible.')) return;
+            delete classData[code];
+            saveClassData();
+            notifyClassDataChanged();
+            panel.remove();
+            alert('Código borrado.');
+        };
+        let btnCerrar = document.createElement('button'); btnCerrar.textContent='Cerrar'; btnCerrar.onclick = ()=>{ panel.remove(); };
+        controls.appendChild(btnBorrar);
+        controls.appendChild(btnCerrar);
+        panel.appendChild(controls);
+
+        let tabla = document.createElement('table');
+        tabla.style.width = '100%';
+        tabla.style.borderCollapse = 'collapse';
+        tabla.innerHTML = `<tr style="background:rgba(255,255,255,0.06)"><th style="padding:8px;border:1px solid #444">Alumno</th><th style="padding:8px;border:1px solid #444">Cantidad de cuestionarios</th><th style="padding:8px;border:1px solid #444">Promedio</th></tr>`;
+
+        let codeData = classData[code] && classData[code].students ? classData[code].students : {};
+        let names = Object.keys(codeData).sort();
+        if(names.length===0){
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="3" style="padding:12px;text-align:center">No hay estudiantes registrados con este código.</td>`;
+            tabla.appendChild(tr);
+        } else {
+            for(let name of names){
+                let rec = codeData[name];
+                let quizzes = rec.quizzes || {};
+                let keys = Object.keys(quizzes);
+                let count = keys.length;
+                let avg = 0;
+                if(count>0){ let sum=0; for(let k of keys) sum += Number(quizzes[k])||0; avg = Math.round((sum/count)*100)/100; }
+
+                let tr = document.createElement('tr');
+                let tdName = document.createElement('td'); tdName.style.padding='8px'; tdName.style.border='1px solid #444'; tdName.textContent = name;
+                let tdCount = document.createElement('td'); tdCount.style.padding='8px'; tdCount.style.border='1px solid #444'; tdCount.style.cursor='default'; tdCount.textContent = count;
+                // tooltip with quiz list
+                tdCount.title = keys.join(', ');
+                let tdAvg = document.createElement('td'); tdAvg.style.padding='8px'; tdAvg.style.border='1px solid #444'; tdAvg.textContent = avg;
+                tr.appendChild(tdName); tr.appendChild(tdCount); tr.appendChild(tdAvg);
+                tabla.appendChild(tr);
+            }
+        }
+        panel.appendChild(tabla);
+    }
+
+    build();
+    document.body.appendChild(panel);
+
+    // refresh when classData changes (storage or custom event)
+    function refreshOnChange(e){
+        loadClassData();
+        build();
+    }
+    window.addEventListener('storage', function(ev){ if(ev.key==='classData') refreshOnChange(); });
+    window.addEventListener('classDataChanged', refreshOnChange);
+}
+</script>
+</body>
+</html>
